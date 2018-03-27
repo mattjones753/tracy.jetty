@@ -16,17 +16,18 @@
     (getHeader [headerName]
       (get headers headerName))))
 
-(testing "tracing jetty handler should wrap request handling with context"
-  (binding [a-variable "test"]
-    (let [expected-correlation-id (str (str (UUID/randomUUID)))
-          handler ^HandlerWrapper (trace-jetty/tracing-handler-factory
-                                    [(fn [f]
-                                       (set!
-                                         a-variable
-                                         (:correlation-id-key
-                                           (trace/get-tracing-context)))
-                                       (f))]
-                                    {:correlation-id-key uuid})
-          request-headers {"correlation-id-key" expected-correlation-id}
-          _ (.handle handler "" nil (stub-request request-headers) nil)]
-      (is (= expected-correlation-id a-variable)))))
+(deftest tracing-from-jetty
+  (testing "tracing jetty handler should wrap request handling with context"
+    (binding [a-variable "test"]
+      (let [expected-correlation-id (str (str (UUID/randomUUID)))
+            handler ^HandlerWrapper (trace-jetty/tracing-handler-factory
+                                      [(fn [f]
+                                         (set!
+                                           a-variable
+                                           (:correlation-id-key
+                                             (trace/get-tracing-context)))
+                                         (f))]
+                                      {:correlation-id-key uuid})
+            request-headers {"correlation-id-key" expected-correlation-id}
+            _ (.handle handler "" nil (stub-request request-headers) nil)]
+        (is (= expected-correlation-id a-variable))))))
